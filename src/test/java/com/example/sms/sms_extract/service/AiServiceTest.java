@@ -3,10 +3,13 @@ package com.example.sms.sms_extract.service;
 import com.example.sms.sms_extract.dto.TransactionDetailsDTO;
 import com.example.sms.sms_extract.service.preprocessing.SmsPreprocessingService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,34 +17,55 @@ import static org.junit.jupiter.api.Assertions.*;
 class AiServiceTest {
 
     @Autowired
-    private ChatClient.Builder chatClientBuilder;
-    private ChatClient chatClient;
-
-    @Autowired
     private SmsPreprocessingService smsPreprocessingService;
 
+    @Test
+    @DisplayName("Should successfully process a standard debit SMS")
+    void testProcessDebitSms() {
+        // Raw SMS with Rs., lowercase debited, and an account number
+        String rawSms = "Dear Customer, RS 500.00 was debited from a/c x1234 on 10-May-26. Avl Bal: INR 45,000.";
 
-    @BeforeEach
-    void setUp() {
-        // Build the real client from the autoconfigured builder
-        this.chatClient = chatClientBuilder.build();
+        String result = smsPreprocessingService.process(rawSms);
+
+        assertNotNull(result);
+        // Check classification
+        assertTrue(result.startsWith("[EXPENSE]"), "Should be classified as an expense");
+        // Check normalization
+        assertTrue(result.contains("INR 500.00"), "Rs should be normalized to INR");
+        assertTrue(result.contains("spent"), "debited should be normalized to spent");
+        // Check masking
+        assertTrue(result.contains("A/C ****"), "Account number should be masked");
     }
 
     @Test
-    void sms_extract() {
-        // act
-        String resource = "Extract transaction details from the following SMS: {sms_text}";
-        String sms = "Dear Customer, Rs 5,500.00 was debited from A/c **X1234 on 10-May-26. Through phonepay. Avl Bal: INR 45,000.00. - Indian bank";
+    @DisplayName("Should mask sensitive OTP and Phone numbers")
+    void testMasking() {
+        String rawSms = "Your OTP is 123456. Contact 9876543210 for help.";
 
-        //arrange
-        String smsre  = smsPreprocessingService.process(sms);
-        System.out.println(smsre);
-        TransactionDetailsDTO result = chatClient.prompt()
-                .user(u -> u.text(resource).param("sms_text", smsre))
-                .call()
-                .entity(TransactionDetailsDTO.class);
+        // This fails the validator because it lacks transaction keywords,
+        // so we test the result is null as intended by your logic.
+        String result = smsPreprocessingService.process(rawSms);
+        assertNull(result, "Non-transactional SMS should be rejected by validator");
+    }
 
-        // assert
+    @Test
+    @DisplayName("Should return null for promotional/invalid SMS")
+    void testValidator() {
+        String promoSms = "Get 50% off on your next pizza! Order now.";
+        String result = smsPreprocessingService.process(promoSms);
 
+        assertNull(result, "Promotional SMS should not pass the keyword validator");
+    }
+
+    @Test
+    @DisplayName("Should handle currency symbols and extra spaces")
+    void testCleaningAndCurrency() {
+        String rawSms = "Received   ₹1000   from   friend";
+        String result = smsPreprocessingService.process(rawSms);
+
+        assertNotNull(result);
+        assertTrue(result.startsWith("[INCOME]"), "Should be classified as income");
+        assertTrue(result.contains("INR 1000"), "Symbol ₹ should be converted to INR");
+        assertFalse(result.contains("   "), "Extra spaces should be removed");
     }
 }

@@ -13,19 +13,26 @@ import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
 public class AiService {
     private AiRepository aiRepository;
     private ChatClient chatClient;
     private SmsPreprocessingService smsPreprocessingService;
 
+    // Standard constructor injection (Better than using both Lombok @AllArgs and @NoArgs)
+    public AiService(AiRepository aiRepository, ChatClient chatClient, SmsPreprocessingService smsPreprocessingService) {
+        this.aiRepository = aiRepository;
+        this.chatClient = chatClient;
+        this.smsPreprocessingService = smsPreprocessingService;
+    }
+
+
     @Value("classpath:/templates/sms-extraction.st")
     private Resource resource;
 
     public TransactionDetailsDTO extract(String sms) {
+        System.out.println(sms);
         String cleanedSms = smsPreprocessingService.process(sms);
-
+        System.out.println(cleanedSms + "\n\n\n");
         if (cleanedSms == null) {
             throw new RuntimeException("Invalid or non-transaction SMS");
         }
@@ -37,7 +44,8 @@ public class AiService {
         return result;
     }
 
-    public void savetodb(TransactionDetailsDTO tdto , Sms sms) {
+    public void savetodb(TransactionDetailsDTO tdto) {
+        Sms sms = new Sms();
         sms.set_transaction(tdto.is_transaction());
         sms.setAmount(tdto.amount());
         sms.setCurrency(tdto.currency());
@@ -51,6 +59,8 @@ public class AiService {
         sms.setBalance(tdto.balance());
         sms.setStatus(sms.getStatus());
         sms.setRaw_sms(tdto.raw_sms());
+
+        aiRepository.save(sms);
 
 
     }

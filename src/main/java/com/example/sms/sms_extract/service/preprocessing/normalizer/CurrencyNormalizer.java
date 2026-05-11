@@ -9,7 +9,7 @@ public class CurrencyNormalizer {
 
         return sms
                 .replace("₹", "INR ")
-                .replaceAll("(?i)rs\\\\.?\\\\s*", "INR ")
-                .replaceAll("(?i)inr\\\\s*", "INR ");
+                .replaceAll("(?i)rs\\.?\\s*", "INR ")
+                .replaceAll("(?i)inr\\s*", "INR ");
     }
 }

@@ -8,7 +8,7 @@ public class OtpMasker {
     public String mask(String sms) {
 
         return sms.replaceAll(
-                "(?i)otp\\\\s*[:is-]*\\\\s*\\\\d{4,8}",
+                "(?i)otp\\s*[:is-]*\\s*\\d{4,8}",
                 "OTP [REMOVED]"
         );
     }

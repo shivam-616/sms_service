@@ -19,11 +19,11 @@ public class SmsCleaner {
 
     private String removeUrls(String sms) {
 
-        return sms.replaceAll("https?://\\\\S+", "");
+        return sms.replaceAll("https?://\\S+", "");
     }
 
     private String removeExtraSpaces(String sms) {
 
-        return sms.replaceAll("\\\\s+", " ");
+        return sms.replaceAll("\\s+", " ");
     }
 }

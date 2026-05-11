@@ -8,7 +8,7 @@ public class PhoneMasker {
     public String mask(String sms) {
 
         return sms.replaceAll(
-                "\\\\b\\\\d{10}\\\\b",
+                "\\b\\d{10}\\b",
                 "**********"
         );
     }
