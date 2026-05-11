@@ -1,12 +1,13 @@
 package com.example.sms.sms_extract.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.Data;
+import lombok.NonNull;
 
-import java.util.Date;
 
 @Entity
 @Data
@@ -16,11 +17,18 @@ public class Sms {
     @GeneratedValue(strategy = GenerationType.AUTO)
     int sms_id;
 
-    String name;
-
+    boolean is_transaction;
     Double amount;
 
-    Date created_at;
-
-    Long total_amount;
+    String currency;
+    String merchant;
+    String category;
+    String payment_method;
+    String bank;
+    String account_last4;
+    String reference_id;
+    String timestamp;
+    int balance;
+    String status;
+    String raw_sms;
 }
