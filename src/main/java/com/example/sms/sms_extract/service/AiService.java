@@ -44,7 +44,7 @@ public class AiService {
                 .user(u -> u.text(resource).param("sms_text", cleanedSms))
                 .call().entity(TransactionDetailsDTO.class);
 
-        smsdataProducer.sendEventToKafka(result);
+        smsdataProducer.sendEventToKafka( userId , result);
     }
 
 

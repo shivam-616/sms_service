@@ -21,8 +21,12 @@ public class smsdataProducer {
         this.kafkaTemplate = kafkaTemplate;
     }
 
-    public void sendEventToKafka(TransactionDetailsDTO transactionDetailsDTO) {
-        Message<TransactionDetailsDTO> message = MessageBuilder.withPayload(transactionDetailsDTO).setHeader(KafkaHeaders.TOPIC , topicJsonName).build();
+    public void sendEventToKafka(String userId, TransactionDetailsDTO transactionDetailsDTO) {
+        Message<TransactionDetailsDTO> message = MessageBuilder
+                .withPayload(transactionDetailsDTO)
+                .setHeader(KafkaHeaders.TOPIC, topicJsonName)
+                .setHeader(KafkaHeaders.KEY, userId) // Set userId as the Kafka Key
+                .build();
         kafkaTemplate.send(message);
     }
 
